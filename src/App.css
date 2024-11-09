@@ -1,38 +1,105 @@
-.App {
-  text-align: center;
-}
+/* src/App.css */
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+  input, select, button {
+    width: 100%;
+  }
+
+  .todo-list, .task-list {
+    padding: 15px;
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+@media (max-width: 480px) {
+  h2, h3 {
+    font-size: 1.5em;
+  }
+
+  .task-list li {
+    font-size: 0.9em;
+    padding: 8px;
+  }
+}
+/* src/App.css */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f4f8;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h2, h3 {
+  color: #0d47a1;
+}
+
+input, select, button {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border: 1px solid #90caf9;
+  border-radius: 4px;
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #0d47a1;
   color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.App-link {
-  color: #61dafb;
+button:hover {
+  background-color: #1565c0;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.todo-list, .task-list {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.task-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.task-list li {
+  background-color: #e3f2fd;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 4px;
+}
+/* src/App.css */
+
+.task-item {
+  background-color: #e3f2fd;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: move;
+  transition: background-color 0.3s;
+}
+
+.task-item:hover {
+  background-color: #bbdefb;
+}
+
+.task-list.isOver {
+  background-color: #bbdefb;
 }
