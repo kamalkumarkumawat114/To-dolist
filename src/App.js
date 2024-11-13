@@ -1,20 +1,44 @@
 // src/App.js
-import React from "react";
-
-import "./App.css";
-import Signup from "./Components/SignUp";
-import Login from "./Components/Login";
-import TodoList from "./Components/ToDoList";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import React, { useState, useEffect } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebaseConfig";
+import LoginSignup from "./Components/Login";
+import ToDoList from "./Components/ToDoList";
+import "./App.css"
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null); // Clear user state on logout
+      alert("Logged out successfully!");
+    } catch (error) {
+      alert("Failed to log out: " + error.message);
+    }
+  };
+
   return (
-    <DndProvider backend={HTML5Backend}>
-      <Signup/>
-      <Login />
-      <TodoList />
-      </DndProvider>
+    <div className="App">
+      {user ? (
+        <div>
+          <div className="welcome">
+          <h2>{user.email}</h2>
+          <button id="logout" onClick={handleLogout}>Logout</button></div>
+          <ToDoList user={user} />
+        </div>
+      ) : (
+        <LoginSignup setUser={setUser} />
+      )}
+    </div>
   );
 }
 

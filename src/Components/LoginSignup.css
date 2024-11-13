@@ -1,0 +1,165 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f1f3f6; 
+}
+
+.toggle-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.toggle-buttons button {
+  background-color: #2874f0; 
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.toggle-buttons button:not(.active) {
+  background-color: #dbe9ff; 
+  color: #2874f0;
+}
+
+.toggle-buttons .active {
+  background-color: #2874f0; 
+  color: white;
+}
+
+.form-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.form-container h2 {
+  font-size: 24px;
+  color: #333333;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #dbe9ff;
+  border-radius: 5px;
+  font-size: 16px;
+  color: #333333;
+}
+
+.form-input:focus {
+  border-color: #2874f0; 
+  outline: none;
+}
+
+.form-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #2874f0; 
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.form-button:hover {
+  background-color: #1565c0; 
+}
+/* .login-container, .todo-list {
+  background-color: #2874f0;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+} */
+
+.toggle-buttons button {
+  background-color: white;
+  color: #2874f0;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.form-button {
+  background-color: white;
+  color: #2874f0;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.todo-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  background-color: #f4f6f8;
+}
+
+h2, h3 {
+  color: #0071dc;
+}
+
+input[type="text"], input[type="date"], select {
+  padding: 8px;
+  margin: 5px;
+  border: 1px solid #0071dc;
+  border-radius: 4px;
+  width: calc(100% / 5 - 12px);
+}
+
+button {
+  padding: 10px 15px;
+  background-color: #0071dc;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005bb5;
+}
+
+.todo-list {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.task {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.task h4 {
+  color: #0071dc;
+  margin: 0 0 5px 0;
+}
+
+.task p {
+  margin: 2px 0;
+  color: #333333;
+}
+
