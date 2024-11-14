@@ -3,6 +3,7 @@ import { db } from "../firebaseConfig";
 import { addDoc, collection, onSnapshot, query, where, updateDoc, doc } from "firebase/firestore";
 import Task from "./Task";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import "./LoginSignup.css"
 
 function ToDoList({ user }) {
   const [lists, setLists] = useState([]);
@@ -26,7 +27,7 @@ function ToDoList({ user }) {
       await addDoc(collection(db, "lists"), {
         userId: user.uid,
         name: newListName,
-        tasks: [], 
+        tasks: [],
       });
       setNewListName("");
     } catch (error) {
@@ -34,77 +35,66 @@ function ToDoList({ user }) {
     }
   };
 
-    const onDragEnd = async (result) => {
-    const { source, destination } = result;
-  
-    // If the task is dropped outside any list
-    if (!destination) return;
-  
-    // If the task was moved within the same list
-    if (source.droppableId === destination.droppableId) {
-      const sourceList = lists.find((list) => list.id === source.droppableId);
-      const reorderedTasks = Array.from(sourceList.tasks);
-      const [movedTask] = reorderedTasks.splice(source.index, 1);
-      reorderedTasks.splice(destination.index, 0, movedTask);
-  
-      // Update the priority of tasks after reordering
-      reorderedTasks.forEach((task, index) => {
-        if (index === 0) task.priority = "High";
-        else if (index === reorderedTasks.length - 1) task.priority = "Low";
-        else task.priority = "Medium";
-      });
-  
-      const updatedList = { ...sourceList, tasks: reorderedTasks };
-      setLists(lists.map((list) => (list.id === sourceList.id ? updatedList : list)));
-  
-      // Update Firebase with reordered tasks and updated priorities
-      const listRef = doc(db, "lists", sourceList.id);
-      await updateDoc(listRef, { tasks: reorderedTasks });
-    } else {
-      // Moving task between different lists
-      const sourceList = lists.find((list) => list.id === source.droppableId);
-      const destList = lists.find((list) => list.id === destination.droppableId);
-  
-      const sourceTasks = Array.from(sourceList.tasks);
-      const [movedTask] = sourceTasks.splice(source.index, 1);
-  
-      const destTasks = Array.from(destList.tasks);
-      destTasks.splice(destination.index, 0, movedTask);
-  
-      //  the priority of tasks in both lists
-      sourceTasks.forEach((task, index) => {
-        if (index === 0) task.priority = "High";
-        else if (index === sourceTasks.length - 1) task.priority = "Low";
-        else task.priority = "Medium";
-      });
-  
-      destTasks.forEach((task, index) => {
-        if (index === 0) task.priority = "High";
-        else if (index === destTasks.length - 1) task.priority = "Low";
-        else task.priority = "Medium";
-      });
-  
-      const updatedSourceList = { ...sourceList, tasks: sourceTasks };
-      const updatedDestList = { ...destList, tasks: destTasks };
-  
-      setLists(
-        lists.map((list) =>
-          list.id === sourceList.id
-            ? updatedSourceList
-            : list.id === destList.id
-            ? updatedDestList
-            : list
-        )
-      );
-  
-      // Update Firebase for both source and destination lists
+
+const onDragEnd = async (result) => {
+  const { source, destination } = result;
+
+  if (!destination) return; // Exit if dropped outside any area
+
+  const sourceList = lists.find((list) => list.id === source.droppableId);
+  const destinationList = lists.find((list) => list.id === destination.droppableId);
+
+  const sourceTasks = Array.from(sourceList.tasks);
+  const [movedTask] = sourceTasks.splice(source.index, 1);
+
+  // Check if dropped on a priority area
+  if (destination.droppableId === "highPriority") {
+    movedTask.priority = "High";
+  } else if (destination.droppableId === "mediumPriority") {
+    movedTask.priority = "Medium";
+  } else if (destination.droppableId === "lowPriority") {
+    movedTask.priority = "Low";
+  } else if (sourceList !== destinationList) {
+    // Moving to a different list
+    const destinationTasks = Array.from(destinationList.tasks);
+    destinationTasks.splice(destination.index, 0, movedTask);
+
+    // Update both lists locally
+    const updatedLists = lists.map((list) => {
+      if (list.id === sourceList.id) return { ...list, tasks: sourceTasks };
+      if (list.id === destinationList.id) return { ...list, tasks: destinationTasks };
+      return list;
+    });
+    setLists(updatedLists);
+
+    // Update both lists in Firebase
+    try {
       const sourceListRef = doc(db, "lists", sourceList.id);
-      const destListRef = doc(db, "lists", destList.id);
+      const destinationListRef = doc(db, "lists", destinationList.id);
       await updateDoc(sourceListRef, { tasks: sourceTasks });
-      await updateDoc(destListRef, { tasks: destTasks });
+      await updateDoc(destinationListRef, { tasks: destinationTasks });
+    } catch (error) {
+      console.error("Error updating lists in Firebase:", error);
     }
-  };
-  
+    return;
+  }
+
+  // Update priority within the same list
+  sourceTasks.splice(destination.index, 0, movedTask);
+  const updatedList = { ...sourceList, tasks: sourceTasks };
+  setLists(lists.map((list) => (list.id === sourceList.id ? updatedList : list)));
+
+  // Update Firebase for single list if moving within the same list
+  try {
+    const listRef = doc(db, "lists", sourceList.id);
+    await updateDoc(listRef, { tasks: sourceTasks });
+  } catch (error) {
+    console.error("Error updating list in Firebase:", error);
+  }
+};
+
+
+
 
   return (
     <div className="todo-container">
@@ -118,21 +108,48 @@ function ToDoList({ user }) {
       <button onClick={createList}>Create List</button>
 
       <DragDropContext onDragEnd={onDragEnd}>
+        {/* Priority Buttons as Droppable Areas */}
+        <div className="priority-buttons">
+          <Droppable droppableId="highPriority">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps} className="priority-button-high">
+                Drop Here for High Priority
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+          <Droppable droppableId="mediumPriority">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps} className="priority-button-medium">
+                Drop Here for Medium Priority
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+          <Droppable droppableId="lowPriority">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps} className="priority-button-low">
+                Drop Here for Low Priority
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </div>
+
+        {/* Lists */}
         {lists.map((list) => (
           <Droppable droppableId={list.id} key={list.id}>
-            {(provided) => {
-              return (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="todo-list"
-                >
-                  <h3>{list.name}</h3>
-                  <Task list={list} />
-                  {provided.placeholder}
-                </div>
-              );
-            }}
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="todo-list"
+              >
+                <h3>{list.name}</h3>
+                <Task list={list} />
+                {provided.placeholder}
+              </div>
+            )}
           </Droppable>
         ))}
       </DragDropContext>
