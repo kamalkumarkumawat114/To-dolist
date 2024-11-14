@@ -163,3 +163,56 @@ button:hover {
   color: #333333;
 }
 
+.priority-buttons {
+ 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  flex-direction: column;
+  width: 100%;
+}
+
+
+
+.priority-button-high {
+  background-color: #ffcccc;
+  border: 1px solid #ff4d4d;
+  height: 50px;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+.priority-button-medium {
+  background-color: #fff3cd;
+  border: 1px solid #ffbf00;
+  margin: 20px 0px;
+  height: 50px;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+.priority-button-low {
+  background-color: #d4edda;
+  border: 1px solid #4caf50;
+  height: 50px;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+.task-item {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
