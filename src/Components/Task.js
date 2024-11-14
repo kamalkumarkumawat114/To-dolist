@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { db } from "../firebaseConfig";
 import { updateDoc, doc, arrayUnion } from "firebase/firestore";
 import { Draggable } from "react-beautiful-dnd";
+import "./LoginSignup.css"
 
 function Task({ list }) {
   const [newTask, setNewTask] = useState({
+    id: `${Date.now()}`, // unique ID based on timestamp
     title: "",
     description: "",
     dueDate: "",
@@ -12,7 +14,7 @@ function Task({ list }) {
   });
 
   const addTask = async () => {
-    if (!newTask.title || !newTask.description || !newTask.dueDate || !newTask.priority) {
+    if (!newTask.title || !newTask.description || !newTask.dueDate) {
       alert("Please fill all task fields.");
       return;
     }
@@ -20,10 +22,9 @@ function Task({ list }) {
     try {
       const listRef = doc(db, "lists", list.id);
       await updateDoc(listRef, {
-        tasks: arrayUnion(newTask), 
+        tasks: arrayUnion(newTask),
       });
-      
-      setNewTask({ title: "", description: "", dueDate: "", priority: "Low" });
+      setNewTask({ id: `${Date.now()}`, title: "", description: "", dueDate: "", priority: "Low" });
     } catch (error) {
       console.error("Error adding task: ", error);
     }
@@ -31,6 +32,7 @@ function Task({ list }) {
 
   return (
     <div>
+      {/* Form to Add a New Task */}
       <input
         type="text"
         placeholder="Task Title"
@@ -58,15 +60,16 @@ function Task({ list }) {
       </select>
       <button onClick={addTask}>Add Task</button>
 
+      {/* List of Tasks with Drag-and-Drop Functionality */}
       <div className="tasks-list">
         {list.tasks && list.tasks.map((task, index) => (
-          <Draggable draggableId={task.id || `${task.title}-${index}`} index={index} key={task.id || index}>
+          <Draggable draggableId={task.id} index={index} key={task.id}>
             {(provided) => (
               <div
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
-                className="task"
+                className={`task task-${task.priority.toLowerCase()}`}
               >
                 <h4>{task.title}</h4>
                 <p>{task.description}</p>
