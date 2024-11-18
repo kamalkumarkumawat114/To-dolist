@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
-import { addDoc, collection, onSnapshot, query, where, updateDoc, doc } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, query, where, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import Task from "./Task";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
-import "./LoginSignup.css"
+import "./LoginSignup.css";
 
 function ToDoList({ user }) {
   const [lists, setLists] = useState([]);
   const [newListName, setNewListName] = useState("");
 
+  // Fetch taskLists from Firestore
   useEffect(() => {
-    const q = query(collection(db, "lists"), where("userId", "==", user.uid));
+    const q = query(collection(db, "taskLists"), where("createdBy", "==", user.email)); // Use "createdBy" instead of "userId"
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const listsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setLists(listsData);
@@ -18,16 +19,19 @@ function ToDoList({ user }) {
     return unsubscribe;
   }, [user]);
 
+  // Create a new task list
   const createList = async () => {
     if (!newListName) {
       alert("Please enter a list name.");
       return;
     }
     try {
-      await addDoc(collection(db, "lists"), {
-        userId: user.uid,
-        name: newListName,
+      await addDoc(collection(db, "taskLists"), {
+        title: newListName,
+        createdBy: user.email,
         tasks: [],
+        creationTime: serverTimestamp(),
+        lastUpdated: serverTimestamp(),
       });
       setNewListName("");
     } catch (error) {
@@ -35,66 +39,62 @@ function ToDoList({ user }) {
     }
   };
 
+  const onDragEnd = async (result) => {
+    const { source, destination } = result;
 
-const onDragEnd = async (result) => {
-  const { source, destination } = result;
+    if (!destination) return; // Exit if dropped outside any area
 
-  if (!destination) return; // Exit if dropped outside any area
+    const sourceList = lists.find((list) => list.id === source.droppableId);
+    const destinationList = lists.find((list) => list.id === destination.droppableId);
 
-  const sourceList = lists.find((list) => list.id === source.droppableId);
-  const destinationList = lists.find((list) => list.id === destination.droppableId);
+    const sourceTasks = Array.from(sourceList.tasks);
+    const [movedTask] = sourceTasks.splice(source.index, 1);
 
-  const sourceTasks = Array.from(sourceList.tasks);
-  const [movedTask] = sourceTasks.splice(source.index, 1);
+    // Check if dropped on a priority area
+    if (destination.droppableId === "highPriority") {
+      movedTask.priority = "High";
+    } else if (destination.droppableId === "mediumPriority") {
+      movedTask.priority = "Medium";
+    } else if (destination.droppableId === "lowPriority") {
+      movedTask.priority = "Low";
+    } else if (sourceList !== destinationList) {
+      // Moving to a different list
+      const destinationTasks = Array.from(destinationList.tasks);
+      destinationTasks.splice(destination.index, 0, movedTask);
 
-  // Check if dropped on a priority area
-  if (destination.droppableId === "highPriority") {
-    movedTask.priority = "High";
-  } else if (destination.droppableId === "mediumPriority") {
-    movedTask.priority = "Medium";
-  } else if (destination.droppableId === "lowPriority") {
-    movedTask.priority = "Low";
-  } else if (sourceList !== destinationList) {
-    // Moving to a different list
-    const destinationTasks = Array.from(destinationList.tasks);
-    destinationTasks.splice(destination.index, 0, movedTask);
+      // Update both lists locally
+      const updatedLists = lists.map((list) => {
+        if (list.id === sourceList.id) return { ...list, tasks: sourceTasks };
+        if (list.id === destinationList.id) return { ...list, tasks: destinationTasks };
+        return list;
+      });
+      setLists(updatedLists);
 
-    // Update both lists locally
-    const updatedLists = lists.map((list) => {
-      if (list.id === sourceList.id) return { ...list, tasks: sourceTasks };
-      if (list.id === destinationList.id) return { ...list, tasks: destinationTasks };
-      return list;
-    });
-    setLists(updatedLists);
-
-    // Update both lists in Firebase
-    try {
-      const sourceListRef = doc(db, "lists", sourceList.id);
-      const destinationListRef = doc(db, "lists", destinationList.id);
-      await updateDoc(sourceListRef, { tasks: sourceTasks });
-      await updateDoc(destinationListRef, { tasks: destinationTasks });
-    } catch (error) {
-      console.error("Error updating lists in Firebase:", error);
+      // Update both lists in Firebase
+      try {
+        const sourceListRef = doc(db, "taskLists", sourceList.id);
+        const destinationListRef = doc(db, "taskLists", destinationList.id);
+        await updateDoc(sourceListRef, { tasks: sourceTasks });
+        await updateDoc(destinationListRef, { tasks: destinationTasks });
+      } catch (error) {
+        console.error("Error updating lists in Firebase:", error);
+      }
+      return;
     }
-    return;
-  }
 
-  // Update priority within the same list
-  sourceTasks.splice(destination.index, 0, movedTask);
-  const updatedList = { ...sourceList, tasks: sourceTasks };
-  setLists(lists.map((list) => (list.id === sourceList.id ? updatedList : list)));
+    // Update priority within the same list
+    sourceTasks.splice(destination.index, 0, movedTask);
+    const updatedList = { ...sourceList, tasks: sourceTasks };
+    setLists(lists.map((list) => (list.id === sourceList.id ? updatedList : list)));
 
-  // Update Firebase for single list if moving within the same list
-  try {
-    const listRef = doc(db, "lists", sourceList.id);
-    await updateDoc(listRef, { tasks: sourceTasks });
-  } catch (error) {
-    console.error("Error updating list in Firebase:", error);
-  }
-};
-
-
-
+    // Update Firebase for single list if moving within the same list
+    try {
+      const listRef = doc(db, "taskLists", sourceList.id);
+      await updateDoc(listRef, { tasks: sourceTasks });
+    } catch (error) {
+      console.error("Error updating list in Firebase:", error);
+    }
+  };
 
   return (
     <div className="todo-container">
@@ -145,7 +145,7 @@ const onDragEnd = async (result) => {
                 ref={provided.innerRef}
                 className="todo-list"
               >
-                <h3>{list.name}</h3>
+                <h3>{list.title}</h3>
                 <Task list={list} />
                 {provided.placeholder}
               </div>
