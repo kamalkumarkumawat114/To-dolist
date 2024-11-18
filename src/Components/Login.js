@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { auth ,db} from "../firebaseConfig";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import "./LoginSignup.css";
 
 function LoginSignup({ setUser }) {
@@ -8,21 +9,42 @@ function LoginSignup({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  // Fetch user's IP address using ipify API
+async function getUserIp() {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip; // Returns the IP address as a string
+  } catch (error) {
+    console.error('Error fetching IP address:', error);
+    return null; // If the IP couldn't be fetched, return null
+  }
+}
 
   const handleSignup = async () => {
+    const userIp = await getUserIp(); 
     if (password !== confirmPassword) {
       alert("Passwords do not match");
       return;
     }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      setUser(userCredential.user);
+      const user = userCredential.user;
+       
+       await addDoc(collection(db, "users"), {
+        email: user.email,
+        password: password, 
+        signupTime: serverTimestamp(),
+        ip: userIp || 'IP not available',
+      });
+
+      setUser(user);
       alert("User signed up successfully!");
     } catch (error) {
       alert(error.message);
     }
   };
-
+    
   const handleLogin = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
